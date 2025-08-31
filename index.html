@@ -17,17 +17,21 @@
       <label for="hole">Hole</label>
       <select id="hole">
         <option value="">Select…</option>
-        <option>1</option><option>2</option> … <option>18</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option>
+        <option>5</option><option>6</option><option>7</option><option>8</option>
+        <option>9</option><option>10</option><option>11</option><option>12</option>
+        <option>13</option><option>14</option><option>15</option><option>16</option>
+        <option>17</option><option>18</option>
       </select>
 
       <label for="bearing">Hole bearing (° tee→green)</label>
-      <input id="bearing" type="number" min="0" max="359" placeholder="e.g., 135 for SE" />
+      <input id="bearing" type="number" min="0" max="359" inputmode="numeric" placeholder="e.g., 135 for SE" />
 
       <label for="driver">Your driver carry (yds)</label>
-      <input id="driver" type="number" placeholder="e.g., 250" />
+      <input id="driver" type="number" inputmode="numeric" placeholder="e.g., 250" />
 
       <label for="iron">Your 7-iron carry (yds)</label>
-      <input id="iron" type="number" placeholder="e.g., 165" />
+      <input id="iron" type="number" inputmode="numeric" placeholder="e.g., 165" />
 
       <label for="when">Time</label>
       <select id="when">
@@ -38,11 +42,20 @@
       <button id="go">Get Weather Tips</button>
     </section>
 
-    <section class="card" id="weather"><h2>Current Conditions</h2><div id="wx">—</div></section>
-    <section class="card" id="tips"><h2>Caddie Tips</h2><div id="out">Pick a hole and press the button.</div></section>
+    <section class="card" id="weather">
+      <h2>Current Conditions</h2>
+      <div id="wx">—</div>
+    </section>
+
+    <section class="card" id="tips">
+      <h2>Caddie Tips</h2>
+      <div id="out">Pick a hole and press the button.</div>
+    </section>
   </main>
 
-  <footer><p class="muted">Prototype for Brookridge CC, Overland Park KS</p></footer>
+  <footer>
+    <p class="muted">Prototype for Brookridge CC, Overland Park KS</p>
+  </footer>
 
   <script src="assets/js/app.js"></script>
 </body>
