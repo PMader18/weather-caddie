@@ -3,6 +3,50 @@
  * Drop-in for assets/js/app.js
  */
 
+/** ---------- Weather impact heuristics (embedded) ---------- **/
+const HEUR = {
+  elev_bonus_pct_per_1000ft: 1.0,     // ≈ +1% carry / 1000 ft
+  temp_pct_per_10F: 1.0,              // ±1% carry per 10°F from 70°F
+  wind_pct_per_mph_driver: 0.01/5,    // driver: ±1% per 5 mph (tail/head)
+  wind_pct_per_mph_7i: 0.007/5,       // 7i: ±0.7% per 5 mph
+  cross_drift_yards_per_200yd_per_mph: 0.7,
+  slow_green_rain_mm: 0.5,
+  slow_green_humidity_pct: 90,
+  fast_green_wind_mph: 15,
+  fast_green_rh_pct: 50
+};
+
+function componentsVsHole(windSpeedMph, windFromDeg, holeBearingDeg) {
+  const toward = (windFromDeg + 180) % 360;
+  const theta = (Math.PI/180) * (toward - holeBearingDeg);
+  const head = windSpeedMph * Math.cos(theta);   // + tail, − head
+  const cross = windSpeedMph * Math.sin(theta);  // + R→L, − L→R
+  return { head, cross };
+}
+
+function carryPct(headCompMph, tempF, elevationFt, club) {
+  const elevPct = (elevationFt / 1000) * HEUR.elev_bonus_pct_per_1000ft;
+  const tempPct = ((tempF - 70) / 10) * HEUR.temp_pct_per_10F;
+  const windCoef = club === "driver" ? HEUR.wind_pct_per_mph_driver : HEUR.wind_pct_per_mph_7i;
+  const windPct = headCompMph * windCoef * 100; // %
+  return elevPct + tempPct + windPct;
+}
+
+function crossAimYards(crossMph, shotYds) {
+  return crossMph * (shotYds / 200) * HEUR.cross_drift_yards_per_200yd_per_mph;
+}
+
+function greenNote(rainMM, rhPct, windMph) {
+  if (rainMM >= HEUR.slow_green_rain_mm || rhPct >= HEUR.slow_green_humidity_pct) {
+    return "Greens likely slower/damp. Add pace and favor a firmer strike.";
+  }
+  if (windMph >= HEUR.fast_green_wind_mph && rhPct <= HEUR.fast_green_rh_pct) {
+    return "Dry & breezy: surfaces a bit quicker/firm; allow for extra release.";
+  }
+  return "Typical speeds; trust your usual lines and pace.";
+}
+/** ---------- end heuristics ---------- **/
+
 /** CONFIG: Course & physics heuristics **/
 const COURSE = {
   name: "Brookridge CC",
