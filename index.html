@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weather Caddie – Brookridge CC</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Weather Caddie</h1>
+    <p class="muted">Hyper-local golf weather insights</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <label for="hole">Hole</label>
+      <select id="hole">
+        <option value="">Select…</option>
+        <option>1</option><option>2</option> … <option>18</option>
+      </select>
+
+      <label for="bearing">Hole bearing (° tee→green)</label>
+      <input id="bearing" type="number" min="0" max="359" placeholder="e.g., 135 for SE" />
+
+      <label for="driver">Your driver carry (yds)</label>
+      <input id="driver" type="number" placeholder="e.g., 250" />
+
+      <label for="iron">Your 7-iron carry (yds)</label>
+      <input id="iron" type="number" placeholder="e.g., 165" />
+
+      <label for="when">Time</label>
+      <select id="when">
+        <option value="now">Now</option>
+        <option value="next">Next hour</option>
+      </select>
+
+      <button id="go">Get Weather Tips</button>
+    </section>
+
+    <section class="card" id="weather"><h2>Current Conditions</h2><div id="wx">—</div></section>
+    <section class="card" id="tips"><h2>Caddie Tips</h2><div id="out">Pick a hole and press the button.</div></section>
+  </main>
+
+  <footer><p class="muted">Prototype for Brookridge CC, Overland Park KS</p></footer>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
