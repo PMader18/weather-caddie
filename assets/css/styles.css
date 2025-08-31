@@ -1,7 +1,0 @@
-body { font-family: sans-serif; margin: 16px; background: #f8fafc; }
-.card { background:#fff; border:1px solid #ddd; border-radius:12px; padding:14px; margin:10px 0; }
-label { display:block; margin-top:10px; font-weight:bold; }
-input, select, button { width:100%; padding:8px; margin-top:4px; border-radius:8px; border:1px solid #ccc; }
-button { background:#0ea5e9; color:white; border:none; font-weight:bold; margin-top:10px; }
-button:hover { filter:brightness(0.95); cursor:pointer; }
-.muted { color:#666; font-size:0.9em; }
