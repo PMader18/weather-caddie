@@ -52,6 +52,29 @@
       <div id="out">Pick a hole and press the button.</div>
     </section>
   </main>
+  
+  <section class="card" id="compass">
+  <h2>Compass • Wind vs. Facing</h2>
+  <p class="muted small">Tap “Enable” on iOS to grant motion/compass access.</p>
+  <button id="enableCompass">Enable compass</button>
+
+  <div class="compass-wrap">
+    <div class="compass-dial" id="dial">
+      <!-- tick marks -->
+      <div class="tick n">N</div><div class="tick e">E</div>
+      <div class="tick s">S</div><div class="tick w">W</div>
+      <!-- wind-from arrow -->
+      <svg class="wind-arrow" id="windArrow" viewBox="0 0 100 100" aria-hidden="true">
+        <polygon points="50,8 58,28 52,28 52,92 48,92 48,28 42,28"></polygon>
+      </svg>
+    </div>
+  </div>
+
+  <div id="compassReadout" class="muted">
+    Facing: —° • Wind from: —° • Relative: —
+  </div>
+</section>
+
 
   <footer>
     <p class="muted">Prototype for Brookridge CC, Overland Park KS</p>
