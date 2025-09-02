@@ -12,27 +12,35 @@ const COURSE = {
   tz: "America/Chicago",
 };
 
-// Per-hole tee→green bearings (°, 0=N, 90=E). Replace with real azimuths when ready.
-const HOLE_BEARINGS = {
-  1: 94,
-  2: 183,
-  3: 0,
-  4: 316,
-  5: 161,
-  6: 215,
-  7: 106,
-  8: 286,
-  9: 4,
-  10: 94,
-  11: 273,
-  12: 220,
-  13: 262,
-  14: 277,
-  15: 273,
-  16: 76,
-  17: 2,
-  18: 116
-};
+// ---- Load hole bearings and yardages from JSON ----
+let HOLE_BEARINGS = {};
+let HOLE_YARDS = {};
+
+async function loadHoleData() {
+  try {
+    const resp = await fetch("assets/data/brookridge_holes.json", { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    // Map hole → bearing, hole → yards
+    HOLE_BEARINGS = Object.fromEntries(
+      data.holes.map(h => [h.hole, h.bearing_deg])
+    );
+    HOLE_YARDS = Object.fromEntries(
+      data.holes.map(h => [h.hole, h.yards])
+    );
+
+    console.log("✅ Hole data loaded", HOLE_BEARINGS, HOLE_YARDS);
+  } catch (err) {
+    console.error("❌ Failed to load brookridge_holes.json:", err);
+    // Fallback: use your hardcoded bearings
+    HOLE_BEARINGS = {
+      1: 94,  2: 183, 3: 0,   4: 316, 5: 161, 6: 215,
+      7: 106, 8: 286, 9: 4,  10: 94, 11: 273, 12: 220,
+      13: 262,14: 277,15: 273,16: 76, 17: 2,  18: 116
+    };
+  }
+}
 
 // Heuristic coefficients (tweak after testing)
 const COEFF = {
@@ -258,7 +266,10 @@ async function run() {
 }
 
 /** ===== Init ===== **/
-(function init() {
+(async function init() {
+  // Load bearings + yardages before anything else
+  await loadHoleData();
+
   const p = loadPrefs();
   if (p.driver) $("driver").value = p.driver;
   if (p.iron) $("iron").value = p.iron;
@@ -273,11 +284,10 @@ async function run() {
   });
 
   $("go").addEventListener("click", async () => {
-    try { await run(); }
-    catch (e) { $("out").innerHTML = `<p style="color:#b91c1c">Error: ${e.message}</p>`; }
+    try {
+      await run();
+    } catch (e) {
+      $("out").innerHTML = `<p style="color:#b91c1c">Error: ${e.message}</p>`;
+    }
   });
-
-  // Compass enable button (present if you added the compass section in HTML)
-  const btn = document.getElementById("enableCompass");
-  if (btn) btn.addEventListener("click", enableCompass);
 })();
