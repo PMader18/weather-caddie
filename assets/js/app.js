@@ -22,23 +22,19 @@ async function loadHoleData() {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
 
-    // Map hole → bearing, hole → yards
-    HOLE_BEARINGS = Object.fromEntries(
-      data.holes.map(h => [h.hole, h.bearing_deg])
-    );
-    HOLE_YARDS = Object.fromEntries(
-      data.holes.map(h => [h.hole, h.yards])
-    );
+    HOLE_BEARINGS = Object.fromEntries(data.holes.map(h => [h.hole, h.bearing_deg]));
+    HOLE_YARDS    = Object.fromEntries(data.holes.map(h => [h.hole, h.yards]));
 
     console.log("✅ Hole data loaded", HOLE_BEARINGS, HOLE_YARDS);
   } catch (err) {
     console.error("❌ Failed to load brookridge_holes.json:", err);
-    // Fallback: use your hardcoded bearings
+    // Fallback bearings so the app still runs
     HOLE_BEARINGS = {
       1: 94,  2: 183, 3: 0,   4: 316, 5: 161, 6: 215,
       7: 106, 8: 286, 9: 4,  10: 94, 11: 273, 12: 220,
       13: 262,14: 277,15: 273,16: 76, 17: 2,  18: 116
     };
+    HOLE_YARDS = {};
   }
 }
 
@@ -158,7 +154,7 @@ function tipsHtml(hole, bearing, wx, prefs) {
   const putt = greenNote(RAIN, RH, WSPD);
 
   return `
-    <p><b>Hole ${hole}</b> (bearing <b>${bearing}°</b>) · Wind vs play:
+    <p><b>Hole ${hole}</b> <span class="muted">(bearing <b>${bearing}°</b>)</span> · Wind vs play:
       <span class="pill">Head/Tail: ${round(head,1)} mph (${head>=0?"tail":"head"})</span>
       <span class="pill">Cross: ${round(Math.abs(cross),1)} mph ${crossTxtDir}</span>
     </p>
@@ -234,7 +230,7 @@ async function enableCompass(){
 
 /** ===== Main flow ===== **/
 async function run() {
-  // Inputs
+  // Gather inputs
   const holeStr = $("hole").value;
   const hole = parseInt(holeStr || "0", 10);
   if (!hole || hole < 1 || hole > 18) {
@@ -248,14 +244,13 @@ async function run() {
     when:   $("when").value
   };
 
-// Bearing: prefer map value, allow manual override
-let bearing = HOLE_BEARINGS[hole];
-let yardage = HOLE_YARDS[hole];  // may be null if not in JSON
-
-const manual = $("bearing").value;
-if (manual !== "") {
-  bearing = clamp(parseFloat(manual), 0, 359);
-}
+  // Bearing strictly from data (no manual override)
+  let bearing = HOLE_BEARINGS[hole];
+  if (bearing == null) {
+    $("out").innerHTML = `<p style="color:#b91c1c">Missing bearing for hole ${hole}. Check assets/data/brookridge_holes.json.</p>`;
+    return;
+  }
+  if ($("bearingView")) $("bearingView").textContent = `${bearing}°`;
 
   // Persist user settings
   savePrefs({ driver: prefs.driver, iron: prefs.iron, lastBearing: bearing });
@@ -264,7 +259,7 @@ if (manual !== "") {
   $("wx").textContent = "Fetching weather…";
   $("out").innerHTML = `<p>Calculating tips…</p>`;
   const wx = await fetchWeather(prefs.when === "next");
-  LAST_WX = wx;              // <-- so compass can use wind
+  LAST_WX = wx;              // compass uses wind
   renderWeather(wx);
   $("out").innerHTML = tipsHtml(hole, bearing, wx, prefs);
 }
@@ -277,16 +272,16 @@ if (manual !== "") {
   const p = loadPrefs();
   if (p.driver) $("driver").value = p.driver;
   if (p.iron) $("iron").value = p.iron;
-  if (p.lastBearing !== undefined) $("bearing").value = p.lastBearing;
 
+  // Update the bearing pill when hole changes
   $("hole").addEventListener("change", () => {
     const h = parseInt($("hole").value || "0", 10);
     if (!h) return;
-    if ($("bearing").value.trim() === "" && HOLE_BEARINGS[h] != null) {
-      $("bearing").value = HOLE_BEARINGS[h];
-    }
+    const b = HOLE_BEARINGS[h];
+    if (b != null && $("bearingView")) $("bearingView").textContent = `${b}°`;
   });
 
+  // Wire buttons
   $("go").addEventListener("click", async () => {
     try {
       await run();
@@ -294,4 +289,7 @@ if (manual !== "") {
       $("out").innerHTML = `<p style="color:#b91c1c">Error: ${e.message}</p>`;
     }
   });
+
+  // Optional compass button
+  document.getElementById("enableCompass")?.addEventListener("click", enableCompass);
 })();
