@@ -1,0 +1,95 @@
+{
+  "course": "Brookridge Golf & Fitness Club",
+  "holes": [
+    {
+      "hole": 1,
+      "bearing_deg": 94,
+      "yards": 2580
+    },
+    {
+      "hole": 2,
+      "bearing_deg": 183,
+      "yards": 3627
+    },
+    {
+      "hole": 3,
+      "bearing_deg": 0,
+      "yards": 1845
+    },
+    {
+      "hole": 4,
+      "bearing_deg": 316,
+      "yards": 2791
+    },
+    {
+      "hole": 5,
+      "bearing_deg": 161,
+      "yards": 851
+    },
+    {
+      "hole": 6,
+      "bearing_deg": 215,
+      "yards": 797
+    },
+    {
+      "hole": 7,
+      "bearing_deg": 106,
+      "yards": 2815
+    },
+    {
+      "hole": 8,
+      "bearing_deg": 286,
+      "yards": 1454
+    },
+    {
+      "hole": 9,
+      "bearing_deg": 4,
+      "yards": 2675
+    },
+    {
+      "hole": 10,
+      "bearing_deg": 94,
+      "yards": 1408
+    },
+    {
+      "hole": 11,
+      "bearing_deg": 273,
+      "yards": 3000
+    },
+    {
+      "hole": 12,
+      "bearing_deg": 220,
+      "yards": 2286
+    },
+    {
+      "hole": 13,
+      "bearing_deg": 262,
+      "yards": 1001
+    },
+    {
+      "hole": 14,
+      "bearing_deg": 277,
+      "yards": 1574
+    },
+    {
+      "hole": 15,
+      "bearing_deg": 273,
+      "yards": 828
+    },
+    {
+      "hole": 16,
+      "bearing_deg": 76,
+      "yards": 2481
+    },
+    {
+      "hole": 17,
+      "bearing_deg": 2,
+      "yards": 2475
+    },
+    {
+      "hole": 18,
+      "bearing_deg": 116,
+      "yards": 2135
+    }
+  ]
+}
