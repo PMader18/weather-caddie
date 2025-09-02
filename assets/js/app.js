@@ -248,10 +248,14 @@ async function run() {
     when:   $("when").value
   };
 
-  // Bearing: prefer map value, allow manual override
-  let bearing = HOLE_BEARINGS[hole];
-  const manual = $("bearing").value;
-  if (manual !== "") bearing = clamp(parseFloat(manual), 0, 359);
+// Bearing: prefer map value, allow manual override
+let bearing = HOLE_BEARINGS[hole];
+let yardage = HOLE_YARDS[hole];  // may be null if not in JSON
+
+const manual = $("bearing").value;
+if (manual !== "") {
+  bearing = clamp(parseFloat(manual), 0, 359);
+}
 
   // Persist user settings
   savePrefs({ driver: prefs.driver, iron: prefs.iron, lastBearing: bearing });
