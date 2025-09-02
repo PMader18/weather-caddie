@@ -14,9 +14,24 @@ const COURSE = {
 
 // Per-hole tee→green bearings (°, 0=N, 90=E). Replace with real azimuths when ready.
 const HOLE_BEARINGS = {
-  1: 45,  2: 120, 3: 200, 4: 310, 5: 135, 6: 270,
-  7: 85,  8: 160, 9: 340, 10: 25, 11: 190, 12: 255,
-  13: 100,14: 150,15: 210,16: 300,17: 60, 18: 330
+  1: 94,
+  2: 183,
+  3: 0,
+  4: 316,
+  5: 161,
+  6: 215,
+  7: 106,
+  8: 286,
+  9: 4,
+  10: 94,
+  11: 273,
+  12: 220,
+  13: 262,
+  14: 277,
+  15: 273,
+  16: 76,
+  17: 2,
+  18: 116
 };
 
 // Heuristic coefficients (tweak after testing)
