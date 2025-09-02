@@ -172,35 +172,24 @@ function tipsHtml(hole, bearing, wx, prefs) {
 }
 
 /** ===== Compass helpers (wind vs. facing) ===== **/
-let LAST_WX = null; // set after fetching weather
-
 function normalizeDeg(d){ d = d % 360; return d < 0 ? d + 360 : d; }
 
-function relativeWindLabel(delta){
-  const a = normalizeDeg(delta); // 0=headwind, 180=tailwind
-  const dir =
-    (a < 22.5 || a >= 337.5) ? "headwind" :
-    (a >= 157.5 && a < 202.5) ? "tailwind" :
-    (a >= 67.5 && a < 112.5) ? "from your right" :
-    (a >= 247.5 && a < 292.5) ? "from your left" :
-    (a > 22.5 && a < 67.5) ? "quartering right" :
-    (a > 112.5 && a < 157.5) ? "quartering behind (right)" :
-    (a > 202.5 && a < 247.5) ? "quartering behind (left)" :
-    "quartering left";
-  return { a, dir };
-}
-
-function extractHeading(evt){
-  if (typeof evt.webkitCompassHeading === "number") return normalizeDeg(evt.webkitCompassHeading);
-  if (typeof evt.alpha === "number") {
-    const so = (screen.orientation && screen.orientation.angle) ? screen.orientation.angle : 0;
-    return normalizeDeg(360 - evt.alpha + so);
-  }
-  return null;
+function leftRightLabel(relToDeg){
+  // relToDeg is wind-to relative to facing (0 = blowing straight ahead with you)
+  // 90 = blowing toward your right; 270 = toward your left
+  const a = normalizeDeg(relToDeg);
+  if (a < 22.5 || a >= 337.5) return "with you (downwind)";
+  if (a >= 157.5 && a < 202.5) return "into you (headwind)";
+  if (a >= 67.5 && a < 112.5) return "to your right (left→right)";
+  if (a >= 247.5 && a < 292.5) return "to your left (right→left)";
+  if (a > 22.5 && a < 67.5) return "quartering right (forward)";
+  if (a > 112.5 && a < 157.5) return "quartering right (back)";
+  if (a > 202.5 && a < 247.5) return "quartering left (back)";
+  return "quartering left (forward)";
 }
 
 async function enableCompass(){
-  // iOS permission prompt
+  // iOS permission
   if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
     try {
       const resp = await DeviceOrientationEvent.requestPermission();
@@ -212,22 +201,37 @@ async function enableCompass(){
   }
 
   window.addEventListener("deviceorientation", (evt) => {
-    const heading = extractHeading(evt);
+    // device heading (0 = facing North)
+    let heading = null;
+    if (typeof evt.webkitCompassHeading === "number") {
+      heading = normalizeDeg(evt.webkitCompassHeading);
+    } else if (typeof evt.alpha === "number") {
+      const so = (screen.orientation && screen.orientation.angle) ? screen.orientation.angle : 0;
+      heading = normalizeDeg(360 - evt.alpha + so);
+    }
     if (heading == null) return;
 
-    const windFrom = LAST_WX?.WDIR ?? null; // meteorological "from" deg
-    if (windFrom != null) {
-      const rel = normalizeDeg(windFrom - heading); // wind-from relative to facing
-      const arrow = document.getElementById("windArrow");
-      if (arrow) arrow.style.transform = `rotate(${rel}deg)`;
-      const { dir } = relativeWindLabel(rel);
-      const wspd = LAST_WX?.WSPD != null ? Math.round(LAST_WX.WSPD) : "—";
-      const ro = document.getElementById("compassReadout");
-      if (ro) ro.textContent = `Facing: ${Math.round(heading)}° • Wind from: ${Math.round(windFrom)}° • ${dir} (${wspd} mph)`;
+    const windFrom = LAST_WX?.WDIR; // met. FROM in degrees
+    if (typeof windFrom !== "number") return;
+
+    // ✅ switch to wind-TO and rotate arrow that way
+    const windTo  = normalizeDeg(windFrom + 180);
+    const relTo   = normalizeDeg(windTo - heading);   // arrow rotation
+    const relFrom = normalizeDeg(windFrom - heading); // for reference text, if you want
+
+    const arrow = document.getElementById("windArrow");
+    if (arrow) arrow.style.transform = `rotate(${relTo}deg)`;
+
+    const readout = document.getElementById("compassReadout");
+    if (readout) {
+      // Cardinal helpers
+      const toCard = (deg) => ["N","NE","E","SE","S","SW","W","NW"][Math.round(deg/45) % 8];
+      readout.textContent =
+        `Facing: ${Math.round(heading)}° • From: ${Math.round(windFrom)}° (${toCard(windFrom)}) • `
+        + `To: ${Math.round(windTo)}° (${toCard(windTo)}) • ${leftRightLabel(relTo)}`;
     }
   }, { passive: true });
 }
-
 /** ===== Main flow ===== **/
 async function run() {
   // Gather inputs
