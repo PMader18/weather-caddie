@@ -170,26 +170,66 @@ function tipsHtml(hole, bearing, wx, prefs) {
     <p class="muted">Tuning: elevation +${COEFF.elev_bonus_pct}% baseline; ±${COEFF.temp_pct_per_10F}% / 10°F; wind sens (driver) ${(COEFF.wind_pct_per_mph_driver*100*5).toFixed(2)}% / 5 mph.</p>
   `;
 }
-
-/** ===== Compass helpers (wind vs. facing) ===== **/
+// ---------- Compass helpers (cardinals + broadcast-y phrases) ----------
 function normalizeDeg(d){ d = d % 360; return d < 0 ? d + 360 : d; }
 
-function leftRightLabel(relToDeg){
-  // relToDeg is wind-to relative to facing (0 = blowing straight ahead with you)
-  // 90 = blowing toward your right; 270 = toward your left
-  const a = normalizeDeg(relToDeg);
-  if (a < 22.5 || a >= 337.5) return "with you (downwind)";
-  if (a >= 157.5 && a < 202.5) return "into you (headwind)";
-  if (a >= 67.5 && a < 112.5) return "to your right (left→right)";
-  if (a >= 247.5 && a < 292.5) return "to your left (right→left)";
-  if (a > 22.5 && a < 67.5) return "quartering right (forward)";
-  if (a > 112.5 && a < 157.5) return "quartering right (back)";
-  if (a > 202.5 && a < 247.5) return "quartering left (back)";
-  return "quartering left (forward)";
+function toCardinal(deg) {
+  const names = ["North","NE","East","SE","South","SW","West","NW"];
+  return names[Math.round(normalizeDeg(deg) / 45) % 8];
 }
 
+/**
+ * Build phrases like:
+ *  - "Wind out of the East, off your right"
+ *  - "Wind out of the South, at your back"
+ *  - "Wind out of the NW, hurting, off your left"
+ *
+ * heading: where the player/device is facing (0=N)
+ * windFrom: meteorological FROM direction in degrees
+ */
+function golfWindPhrase(heading, windFrom) {
+  const windTo   = normalizeDeg(windFrom + 180);           // where the air is going
+  const relTo    = normalizeDeg(windTo - heading);         // wind-to relative to player
+  const relFrom  = normalizeDeg(windFrom - heading);       // wind-from relative to player
+
+  // Helping / hurting / cross (based on wind-to)
+  let primary; // "at your back", "into you", "helping", "hurting", "crosswind"
+  if (relTo < 22.5 || relTo >= 337.5) {
+    primary = "at your back";                   // strong downwind
+  } else if (relTo >= 157.5 && relTo < 202.5) {
+    primary = "into you";                       // strong headwind
+  } else if ((relTo >= 67.5 && relTo < 112.5) || (relTo >= 247.5 && relTo < 292.5)) {
+    primary = "crosswind";                      // near pure cross
+  } else if ((relTo >= 22.5 && relTo < 67.5) || (relTo >= 292.5 && relTo < 337.5)) {
+    primary = "helping";                        // quartering downwind
+  } else { // (112.5–157.5) or (202.5–247.5)
+    primary = "hurting";                        // quartering into
+  }
+
+  // Side phrase uses wind-FROM relative to facing (announcers say "off the right/left" by origin)
+  let side = "";
+  if (relFrom >= 67.5 && relFrom < 112.5) side = "off your right";
+  else if (relFrom >= 247.5 && relFrom < 292.5) side = "off your left";
+  else if ((relFrom > 22.5 && relFrom < 67.5) || (relFrom > 112.5 && relFrom < 157.5)) side = "from the right";
+  else if ((relFrom > 202.5 && relFrom < 247.5) || (relFrom > 292.5 && relFrom < 337.5)) side = "from the left";
+
+  // Assemble broadcast-style line
+  const fromCard = toCardinal(windFrom);
+  let tail;
+  if (primary === "crosswind") {
+    tail = side || "crosswind";
+  } else if (primary === "at your back" || primary === "into you") {
+    tail = primary; // no side needed
+  } else { // helping/hurting quartering
+    tail = side ? `${primary}, ${side}` : primary;
+  }
+
+  return { fromCard, windTo, relTo, phrase: `Wind out of the ${fromCard}, ${tail}` };
+}
+
+// ---------- Replacement compass listener (arrow = wind-to; text = broadcast phrasing) ----------
 async function enableCompass(){
-  // iOS permission
+  // iOS permission prompt
   if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
     try {
       const resp = await DeviceOrientationEvent.requestPermission();
@@ -201,7 +241,7 @@ async function enableCompass(){
   }
 
   window.addEventListener("deviceorientation", (evt) => {
-    // device heading (0 = facing North)
+    // Determine heading (0 = facing North)
     let heading = null;
     if (typeof evt.webkitCompassHeading === "number") {
       heading = normalizeDeg(evt.webkitCompassHeading);
@@ -211,27 +251,27 @@ async function enableCompass(){
     }
     if (heading == null) return;
 
-    const windFrom = LAST_WX?.WDIR; // met. FROM in degrees
+    const windFrom = LAST_WX?.WDIR;
+    const wspd = LAST_WX?.WSPD;
+
     if (typeof windFrom !== "number") return;
 
-    // ✅ switch to wind-TO and rotate arrow that way
-    const windTo  = normalizeDeg(windFrom + 180);
-    const relTo   = normalizeDeg(windTo - heading);   // arrow rotation
-    const relFrom = normalizeDeg(windFrom - heading); // for reference text, if you want
-
+    // Build phrase + rotate arrow to wind-to
+    const info = golfWindPhrase(heading, windFrom);
     const arrow = document.getElementById("windArrow");
-    if (arrow) arrow.style.transform = `rotate(${relTo}deg)`;
+    if (arrow) arrow.style.transform = `rotate(${info.relTo}deg)`; // arrow points where air is going (downwind)
 
     const readout = document.getElementById("compassReadout");
     if (readout) {
-      // Cardinal helpers
-      const toCard = (deg) => ["N","NE","E","SE","S","SW","W","NW"][Math.round(deg/45) % 8];
-      readout.textContent =
-        `Facing: ${Math.round(heading)}° • From: ${Math.round(windFrom)}° (${toCard(windFrom)}) • `
-        + `To: ${Math.round(windTo)}° (${toCard(windTo)}) • ${leftRightLabel(relTo)}`;
+      const speedTxt = (typeof wspd === "number") ? ` • ${Math.round(wspd)} mph` : "";
+      readout.textContent = `${info.phrase}${speedTxt}`;
+      // e.g., "Wind out of the East, off your right • 12 mph"
+      // or    "Wind out of the South, at your back • 8 mph"
     }
   }, { passive: true });
 }
+
+
 /** ===== Main flow ===== **/
 async function run() {
   // Gather inputs
