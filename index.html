@@ -14,82 +14,84 @@
 
   <main>
     <!-- Personal Caddie Profile (MVP UI only) -->
-<section class="card" id="player-profile">
-  <h2>Personal Caddie Profile</h2>
-  <p class="muted small">Your clubs & tendencies live here. Upload a CSV or add a few quick entries. (MVP: UI only; data loads later.)</p>
+    <section class="card" id="player-profile">
+      <h2>Personal Caddie Profile</h2>
+      <p class="muted small">Your clubs & tendencies live here. Upload a CSV or add a few quick entries. (MVP: UI only; data loads later.)</p>
 
-  <!-- Profile picker -->
-  <div class="row">
-    <label for="profileSelect">Active profile</label>
-    <select id="profileSelect">
-      <option value="local">My Saved Profile</option>
-      <option value="default">Default</option>
-      <option value="new">Create New…</option>
-    </select>
-  </div>
-
-  <!-- Profile name (shown when "Create New…" is selected) -->
-  <div class="row" id="profileNameRow" style="display:none">
-    <label for="profileName">Profile name</label>
-    <input id="profileName" type="text" placeholder="e.g., Patrick – Gamer set" />
-  </div>
-
-  <hr class="divider" />
-
-  <!-- CSV uploader (non-functional placeholder) -->
-  <div class="row">
-    <label for="csvClubs">Upload club data (CSV)</label>
-    <input id="csvClubs" type="file" accept=".csv" />
-    <p class="muted tiny">Expected columns (min): <code>club</code>, <code>carry_yards</code>. We’ll compute averages later.</p>
-  </div>
-
-  <!-- Manual quick add (non-functional placeholder) -->
-  <details class="expando">
-    <summary><b>Manual quick add</b> <span class="muted">(optional)</span></summary>
-    <div class="grid-2">
+      <!-- Profile picker -->
       <div class="row">
-        <label for="clubName">Club</label>
-        <input id="clubName" type="text" placeholder="e.g., 7i" />
+        <label for="profileSelect">Active profile</label>
+        <select id="profileSelect">
+          <option value="local">My Saved Profile</option>
+          <option value="default">Default</option>
+          <option value="new">Create New…</option>
+        </select>
       </div>
+
+      <!-- Profile name (shown when "Create New…" is selected) -->
+      <div class="row" id="profileNameRow" style="display:none">
+        <label for="profileName">Profile name</label>
+        <input id="profileName" type="text" placeholder="e.g., Patrick – Gamer set" />
+      </div>
+
+      <hr class="divider" />
+
+      <!-- CSV uploader (non-functional placeholder) -->
       <div class="row">
-        <label for="clubCarry">Carry avg (yds)</label>
-        <input id="clubCarry" type="number" min="20" max="400" placeholder="e.g., 165" />
+        <label for="csvClubs">Upload club data (CSV)</label>
+        <input id="csvClubs" type="file" accept=".csv" />
+        <p class="muted tiny">Expected columns (min): <code>club</code>, <code>carry_yards</code>. We’ll compute averages later.</p>
       </div>
+
+      <!-- Manual quick add (non-functional placeholder) -->
+      <details class="expando">
+        <summary><b>Manual quick add</b> <span class="muted">(optional)</span></summary>
+        <div class="grid-2">
+          <div class="row">
+            <label for="clubName">Club</label>
+            <input id="clubName" type="text" placeholder="e.g., 7i" />
+          </div>
+          <div class="row">
+            <label for="clubCarry">Carry avg (yds)</label>
+            <input id="clubCarry" type="number" min="20" max="400" placeholder="e.g., 165" />
+          </div>
+          <div class="row">
+            <label for="clubStd">Dispersion (± yds)</label>
+            <input id="clubStd" type="number" min="0" max="40" placeholder="e.g., 7" />
+          </div>
+          <div class="row">
+            <label>&nbsp;</label>
+            <button type="button" id="addClubBtn">Add to profile</button>
+          </div>
+        </div>
+
+        <!-- Quick list for visual feedback (static placeholder) -->
+        <table class="table-sm" id="clubTable">
+          <thead><tr><th>Club</th><th>Carry</th><th>±</th></tr></thead>
+          <tbody>
+            <!-- Placeholder row examples (static) -->
+            <tr><td>Driver</td><td>255</td><td>±12</td></tr>
+            <tr><td>7i</td><td>165</td><td>±7</td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <hr class="divider" />
+
+      <!-- Summary chip (static for now) -->
       <div class="row">
-        <label for="clubStd">Dispersion (± yds)</label>
-        <input id="clubStd" type="number" min="0" max="40" placeholder="e.g., 7" />
+        <span class="muted">Summary</span>
+        <div class="pill" id="profileSummary">Profile: Default • Clubs: 2 • Units: yd</div>
       </div>
-      <div class="row">
-        <label>&nbsp;</label>
-        <button type="button" id="addClubBtn">Add to profile</button>
+
+      <!-- Save / Continue (non-functional) -->
+      <div class="row right">
+        <button type="button" id="saveProfileBtn">Save Profile (MVP placeholder)</button>
+        <button type="button" id="continueBtn">Continue to Hole Overview →</button>
       </div>
-    </div>
+    </section>
 
-    <!-- Quick list for visual feedback (static placeholder) -->
-    <table class="table-sm" id="clubTable">
-      <thead><tr><th>Club</th><th>Carry</th><th>±</th></tr></thead>
-      <tbody>
-        <!-- Placeholder row examples (static) -->
-        <tr><td>Driver</td><td>255</td><td>±12</td></tr>
-        <tr><td>7i</td><td>165</td><td>±7</td></tr>
-      </tbody>
-    </table>
-  </details>
-
-  <hr class="divider" />
-
-  <!-- Summary chip (static for now) -->
-  <div class="row">
-    <span class="muted">Summary</span>
-    <div class="pill" id="profileSummary">Profile: Default • Clubs: 2 • Units: yd</div>
-  </div>
-
-  <!-- Save / Continue (non-functional) -->
-  <div class="row right">
-    <button type="button" id="saveProfileBtn">Save Profile (MVP placeholder)</button>
-    <button type="button" id="continueBtn">Continue to Hole Overview →</button>
-  </div>
-</section>
+    <!-- Weather / hole inputs -->
     <section class="card">
       <label for="hole">Hole</label>
       <select id="hole">
@@ -130,30 +132,61 @@
       <h2>Caddie Tips</h2>
       <div id="out">Pick a hole and press the button.</div>
     </section>
+
+    <!-- Compass inside <main> (moved here) -->
+    <section class="card" id="compass">
+      <h2>Compass • Wind vs. Facing</h2>
+      <p class="muted small">Tap “Enable” on iOS to grant motion/compass access.</p>
+      <button id="enableCompass">Enable compass</button>
+
+      <div class="compass-wrap">
+        <div class="compass-dial" id="dial">
+          <!-- tick marks -->
+          <div class="tick n">N</div><div class="tick e">E</div>
+          <div class="tick s">S</div><div class="tick w">W</div>
+          <!-- wind-to arrow (points where the wind is blowing) -->
+          <svg class="wind-arrow" id="windArrow" viewBox="0 0 100 100" aria-hidden="true">
+            <polygon points="50,8 58,28 52,28 52,92 48,92 48,28 42,28"></polygon>
+          </svg>
+        </div>
+      </div>
+
+      <div id="compassReadout" class="muted">
+        Wind out of the —, —
+      </div>
+    </section>
+
+    <!-- Page-1 MVP sugar (UI only) -->
+    <script>
+      (function () {
+        const sel = document.getElementById('profileSelect');
+        const nameRow = document.getElementById('profileNameRow');
+        const summary = document.getElementById('profileSummary');
+
+        sel?.addEventListener('change', () => {
+          if (sel.value === 'new') {
+            nameRow.style.display = '';
+          } else {
+            nameRow.style.display = 'none';
+          }
+          summary.textContent =
+            sel.value === 'default'
+              ? 'Profile: Default • Clubs: 2 • Units: yd'
+              : 'Profile: My Saved Profile • Clubs: 2 • Units: yd';
+        });
+
+        document.getElementById('addClubBtn')?.addEventListener('click', () => {
+          // purely visual placeholder row
+          const name = document.getElementById('clubName').value || 'Club';
+          const carry = document.getElementById('clubCarry').value || '—';
+          const std = document.getElementById('clubStd').value || '—';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${name}</td><td>${carry}</td><td>±${std}</td>`;
+          document.querySelector('#clubTable tbody').appendChild(tr);
+        });
+      })();
+    </script>
   </main>
-  
-  <section class="card" id="compass">
-  <h2>Compass • Wind vs. Facing</h2>
-  <p class="muted small">Tap “Enable” on iOS to grant motion/compass access.</p>
-  <button id="enableCompass">Enable compass</button>
-
-  <div class="compass-wrap">
-    <div class="compass-dial" id="dial">
-      <!-- tick marks -->
-      <div class="tick n">N</div><div class="tick e">E</div>
-      <div class="tick s">S</div><div class="tick w">W</div>
-      <!-- wind-to arrow (points where the wind is blowing) -->
-      <svg class="wind-arrow" id="windArrow" viewBox="0 0 100 100" aria-hidden="true">
-        <polygon points="50,8 58,28 52,28 52,92 48,92 48,28 42,28"></polygon>
-      </svg>
-    </div>
-  </div>
-
-  <div id="compassReadout" class="muted">
-    Facing: —° • Wind from: —° • Relative: —
-  </div>
-</section>
-
 
   <footer>
     <p class="muted">Prototype for Brookridge CC, Overland Park KS</p>
