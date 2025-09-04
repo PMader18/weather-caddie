@@ -13,6 +13,83 @@
   </header>
 
   <main>
+    <!-- Personal Caddie Profile (MVP UI only) -->
+<section class="card" id="player-profile">
+  <h2>Personal Caddie Profile</h2>
+  <p class="muted small">Your clubs & tendencies live here. Upload a CSV or add a few quick entries. (MVP: UI only; data loads later.)</p>
+
+  <!-- Profile picker -->
+  <div class="row">
+    <label for="profileSelect">Active profile</label>
+    <select id="profileSelect">
+      <option value="local">My Saved Profile</option>
+      <option value="default">Default</option>
+      <option value="new">Create New…</option>
+    </select>
+  </div>
+
+  <!-- Profile name (shown when "Create New…" is selected) -->
+  <div class="row" id="profileNameRow" style="display:none">
+    <label for="profileName">Profile name</label>
+    <input id="profileName" type="text" placeholder="e.g., Patrick – Gamer set" />
+  </div>
+
+  <hr class="divider" />
+
+  <!-- CSV uploader (non-functional placeholder) -->
+  <div class="row">
+    <label for="csvClubs">Upload club data (CSV)</label>
+    <input id="csvClubs" type="file" accept=".csv" />
+    <p class="muted tiny">Expected columns (min): <code>club</code>, <code>carry_yards</code>. We’ll compute averages later.</p>
+  </div>
+
+  <!-- Manual quick add (non-functional placeholder) -->
+  <details class="expando">
+    <summary><b>Manual quick add</b> <span class="muted">(optional)</span></summary>
+    <div class="grid-2">
+      <div class="row">
+        <label for="clubName">Club</label>
+        <input id="clubName" type="text" placeholder="e.g., 7i" />
+      </div>
+      <div class="row">
+        <label for="clubCarry">Carry avg (yds)</label>
+        <input id="clubCarry" type="number" min="20" max="400" placeholder="e.g., 165" />
+      </div>
+      <div class="row">
+        <label for="clubStd">Dispersion (± yds)</label>
+        <input id="clubStd" type="number" min="0" max="40" placeholder="e.g., 7" />
+      </div>
+      <div class="row">
+        <label>&nbsp;</label>
+        <button type="button" id="addClubBtn">Add to profile</button>
+      </div>
+    </div>
+
+    <!-- Quick list for visual feedback (static placeholder) -->
+    <table class="table-sm" id="clubTable">
+      <thead><tr><th>Club</th><th>Carry</th><th>±</th></tr></thead>
+      <tbody>
+        <!-- Placeholder row examples (static) -->
+        <tr><td>Driver</td><td>255</td><td>±12</td></tr>
+        <tr><td>7i</td><td>165</td><td>±7</td></tr>
+      </tbody>
+    </table>
+  </details>
+
+  <hr class="divider" />
+
+  <!-- Summary chip (static for now) -->
+  <div class="row">
+    <span class="muted">Summary</span>
+    <div class="pill" id="profileSummary">Profile: Default • Clubs: 2 • Units: yd</div>
+  </div>
+
+  <!-- Save / Continue (non-functional) -->
+  <div class="row right">
+    <button type="button" id="saveProfileBtn">Save Profile (MVP placeholder)</button>
+    <button type="button" id="continueBtn">Continue to Hole Overview →</button>
+  </div>
+</section>
     <section class="card">
       <label for="hole">Hole</label>
       <select id="hole">
