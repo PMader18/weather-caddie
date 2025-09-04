@@ -18,3 +18,14 @@ button:hover { filter:brightness(0.95); cursor:pointer; }
 #enableCompass { margin-top:8px; }
 .small { font-size:.9rem; }
 
+/* --- MVP additions for Player Profile --- */
+.divider { border: 0; border-top: 1px solid #e5e7eb; margin: 12px 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.row { display: grid; gap: 6px; margin: 8px 0; }
+.row.right { display: flex; justify-content: flex-end; gap: 8px; }
+.small { font-size: 0.9rem; }
+.tiny { font-size: 0.8rem; }
+.pill { display: inline-block; padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 999px; }
+.table-sm { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.table-sm th, .table-sm td { border-bottom: 1px solid #eee; padding: 6px 4px; text-align: left; }
+.expando summary { cursor: pointer; padding: 6px 0; }
