@@ -158,33 +158,59 @@
 
     <!-- Page-1 MVP sugar (UI only) -->
     <script>
-      (function () {
-        const sel = document.getElementById('profileSelect');
-        const nameRow = document.getElementById('profileNameRow');
-        const summary = document.getElementById('profileSummary');
+      (async function () {
+    const sel = document.getElementById('profileSelect');
+    const nameRow = document.getElementById('profileNameRow');
+    const summary = document.getElementById('profileSummary');
+    const tblBody = document.querySelector('#clubTable tbody');
 
-        sel?.addEventListener('change', () => {
-          if (sel.value === 'new') {
-            nameRow.style.display = '';
-          } else {
-            nameRow.style.display = 'none';
-          }
-          summary.textContent =
-            sel.value === 'default'
-              ? 'Profile: Default • Clubs: 2 • Units: yd'
-              : 'Profile: My Saved Profile • Clubs: 2 • Units: yd';
-        });
+    function setSummary(profileName, clubCount) {
+      const name = profileName || (sel?.value === 'default' ? 'Default' : 'My Saved Profile');
+      summary.textContent = `Profile: ${name} • Clubs: ${clubCount} • Units: yd`;
+    }
 
-        document.getElementById('addClubBtn')?.addEventListener('click', () => {
-          // purely visual placeholder row
-          const name = document.getElementById('clubName').value || 'Club';
-          const carry = document.getElementById('clubCarry').value || '—';
-          const std = document.getElementById('clubStd').value || '—';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${name}</td><td>${carry}</td><td>±${std}</td>`;
-          document.querySelector('#clubTable tbody').appendChild(tr);
-        });
-      })();
+    function addRow(club, carry, std) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${club}</td><td>${carry}</td><td>±${std ?? '—'}</td>`;
+      tblBody.appendChild(tr);
+    }
+
+    // Show/hide "Profile name" when "Create New…" is chosen
+    sel?.addEventListener('change', () => {
+      nameRow.style.display = (sel.value === 'new') ? '' : 'none';
+      setSummary(undefined, tblBody?.rows?.length ?? 0);
+    });
+
+    // Manual quick-add (visual only, does not persist)
+    document.getElementById('addClubBtn')?.addEventListener('click', () => {
+      const name  = document.getElementById('clubName').value || 'Club';
+      const carry = document.getElementById('clubCarry').value || '—';
+      const std   = document.getElementById('clubStd').value || '—';
+      addRow(name, carry, std);
+      setSummary(undefined, tblBody.rows.length);
+    });
+
+    // ---- Load your JSON file: assets/data/player_profile.json ----
+    try {
+      const resp = await fetch('assets/data/player_profile.json', { cache: 'no-store' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      // Clear any placeholder rows
+      tblBody.innerHTML = '';
+
+      // Populate from JSON
+      const clubs = Array.isArray(data.clubs) ? data.clubs : [];
+      clubs.forEach(c => addRow(c.club, c.carry_yards, c.dispersion));
+
+      // Summary
+      setSummary(data.player || 'My Saved Profile', clubs.length);
+    } catch (err) {
+      // If file is missing or invalid, leave placeholders in place
+      console.warn('player_profile.json not loaded:', err);
+      setSummary(undefined, tblBody?.rows?.length ?? 0);
+    }
+  })();
     </script>
   </main>
 

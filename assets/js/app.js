@@ -1,6 +1,6 @@
 /* Weather Caddie – Brookridge CC (MVP)
  * Hyper-local weather → caddie-style tips + compass (wind vs. facing)
- * Drop-in for assets/js/app.js
+ * THIS FILE LOADS YOUR PLAYER CLUB JSON (average_carry, average_total, dispersion)
  */
 
 /** ===== Course config ===== **/
@@ -12,33 +12,73 @@ const COURSE = {
   tz: "America/Chicago",
 };
 
-// ---- Load hole bearings and yardages from JSON ----
+/** ===== Hole data (bearings + yardages) =====
+ * Loaded from assets/data/brookridge_holes.json if present; otherwise fallback.
+ */
 let HOLE_BEARINGS = {};
 let HOLE_YARDS = {};
-
 async function loadHoleData() {
   try {
     const resp = await fetch("assets/data/brookridge_holes.json", { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-
     HOLE_BEARINGS = Object.fromEntries(data.holes.map(h => [h.hole, h.bearing_deg]));
-    HOLE_YARDS    = Object.fromEntries(data.holes.map(h => [h.hole, h.yards]));
-
+    HOLE_YARDS = Object.fromEntries(data.holes.map(h => [h.hole, h.yards]));
     console.log("✅ Hole data loaded", HOLE_BEARINGS, HOLE_YARDS);
   } catch (err) {
-    console.error("❌ Failed to load brookridge_holes.json:", err);
-    // Fallback bearings so the app still runs
+    console.warn("⚠️ Using fallback hole bearings (no brookridge_holes.json):", err);
     HOLE_BEARINGS = {
       1: 94,  2: 183, 3: 0,   4: 316, 5: 161, 6: 215,
       7: 106, 8: 286, 9: 4,  10: 94, 11: 273, 12: 220,
       13: 262,14: 277,15: 273,16: 76, 17: 2,  18: 116
     };
-    HOLE_YARDS = {};
+    HOLE_YARDS = {}; // optional
   }
 }
 
-// Heuristic coefficients (tweak after testing)
+/** ===== Player profile (YOUR JSON) =====
+ * Loads assets/data/player_profile.json:
+ * {
+ *   "clubs": [
+ *     { "name":"7 iron", "average_carry": 158.4, "average_total": 170.3, "dispersion": 7 },
+ *     ...
+ *   ]
+ * }
+ */
+let PLAYER_PROFILE = { clubs: [] };
+let CLUB_LOOKUP = new Map();  // normalized name -> data
+function normClub(name){ return String(name||"").trim().toLowerCase(); }
+
+async function loadPlayerProfile() {
+  try {
+    const resp = await fetch("assets/data/player_profile.json", { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (!Array.isArray(data.clubs)) throw new Error("Missing clubs array");
+    PLAYER_PROFILE = data;
+    CLUB_LOOKUP = new Map();
+    for (const c of data.clubs) {
+      CLUB_LOOKUP.set(normClub(c.name), c);
+    }
+    console.log("✅ Player profile loaded", PLAYER_PROFILE);
+  } catch (err) {
+    console.error("❌ Failed to load player_profile.json:", err);
+    PLAYER_PROFILE = { clubs: [] };
+    CLUB_LOOKUP = new Map();
+  }
+}
+
+function getClubStats(requestedName, fallbacks=[]) {
+  // Try exact first, then fallbacks in order
+  const tryNames = [requestedName, ...fallbacks];
+  for (const n of tryNames) {
+    const hit = CLUB_LOOKUP.get(normClub(n));
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** ===== Heuristic coefficients ===== **/
 const COEFF = {
   elev_bonus_pct: Math.round((COURSE.elevation_ft / 1000) * 1.0 * 100) / 100, // ~1% / 1000 ft
   temp_pct_per_10F: 1.0,                 // ±1% per 10°F from 70°F
@@ -105,9 +145,9 @@ function componentsVsHole(windSpeed, windFromDeg, holeBearingDeg) {
   return { head, cross };
 }
 
-function carryPct(headCompMph, tempF, club) {
+function carryPct(headCompMph, tempF, clubKind) {
   const tempPct = ((tempF - 70) / 10) * COEFF.temp_pct_per_10F;
-  const windCoef = club === "driver" ? COEFF.wind_pct_per_mph_driver : COEFF.wind_pct_per_mph_7i;
+  const windCoef = clubKind === "driver" ? COEFF.wind_pct_per_mph_driver : COEFF.wind_pct_per_mph_7i;
   const windPct = headCompMph * windCoef * 100;
   return COEFF.elev_bonus_pct + tempPct + windPct; // total %
 }
@@ -154,7 +194,7 @@ function tipsHtml(hole, bearing, wx, prefs) {
   const putt = greenNote(RAIN, RH, WSPD);
 
   return `
-    <p><b>Hole ${hole}</b> <span class="muted">(bearing <b>${bearing}°</b>)</span> · Wind vs play:
+    <p><b>Hole ${hole}</b> (bearing <b>${bearing}°</b>) · Wind vs play:
       <span class="pill">Head/Tail: ${round(head,1)} mph (${head>=0?"tail":"head"})</span>
       <span class="pill">Cross: ${round(Math.abs(cross),1)} mph ${crossTxtDir}</span>
     </p>
@@ -170,66 +210,32 @@ function tipsHtml(hole, bearing, wx, prefs) {
     <p class="muted">Tuning: elevation +${COEFF.elev_bonus_pct}% baseline; ±${COEFF.temp_pct_per_10F}% / 10°F; wind sens (driver) ${(COEFF.wind_pct_per_mph_driver*100*5).toFixed(2)}% / 5 mph.</p>
   `;
 }
-// ---------- Compass helpers (cardinals + broadcast-y phrases) ----------
+
+/** ===== Compass helpers (wind vs. facing) ===== **/
+let LAST_WX = null; // set after fetching weather
 function normalizeDeg(d){ d = d % 360; return d < 0 ? d + 360 : d; }
-
-function toCardinal(deg) {
-  const names = ["North","NE","East","SE","South","SW","West","NW"];
-  return names[Math.round(normalizeDeg(deg) / 45) % 8];
-}
-
-/**
- * Build phrases like:
- *  - "Wind out of the East, off your right"
- *  - "Wind out of the South, at your back"
- *  - "Wind out of the NW, hurting, off your left"
- *
- * heading: where the player/device is facing (0=N)
- * windFrom: meteorological FROM direction in degrees
- */
-function golfWindPhrase(heading, windFrom) {
-  const windTo   = normalizeDeg(windFrom + 180);           // where the air is going
-  const relTo    = normalizeDeg(windTo - heading);         // wind-to relative to player
-  const relFrom  = normalizeDeg(windFrom - heading);       // wind-from relative to player
-
-  // Helping / hurting / cross (based on wind-to)
-  let primary; // "at your back", "into you", "helping", "hurting", "crosswind"
-  if (relTo < 22.5 || relTo >= 337.5) {
-    primary = "at your back";                   // strong downwind
-  } else if (relTo >= 157.5 && relTo < 202.5) {
-    primary = "into you";                       // strong headwind
-  } else if ((relTo >= 67.5 && relTo < 112.5) || (relTo >= 247.5 && relTo < 292.5)) {
-    primary = "crosswind";                      // near pure cross
-  } else if ((relTo >= 22.5 && relTo < 67.5) || (relTo >= 292.5 && relTo < 337.5)) {
-    primary = "helping";                        // quartering downwind
-  } else { // (112.5–157.5) or (202.5–247.5)
-    primary = "hurting";                        // quartering into
+function extractHeading(evt){
+  if (typeof evt.webkitCompassHeading === "number") return normalizeDeg(evt.webkitCompassHeading);
+  if (typeof evt.alpha === "number") {
+    const so = (screen.orientation && screen.orientation.angle) ? screen.orientation.angle : 0;
+    return normalizeDeg(360 - evt.alpha + so);
   }
-
-  // Side phrase uses wind-FROM relative to facing (announcers say "off the right/left" by origin)
-  let side = "";
-  if (relFrom >= 67.5 && relFrom < 112.5) side = "off your right";
-  else if (relFrom >= 247.5 && relFrom < 292.5) side = "off your left";
-  else if ((relFrom > 22.5 && relFrom < 67.5) || (relFrom > 112.5 && relFrom < 157.5)) side = "from the right";
-  else if ((relFrom > 202.5 && relFrom < 247.5) || (relFrom > 292.5 && relFrom < 337.5)) side = "from the left";
-
-  // Assemble broadcast-style line
-  const fromCard = toCardinal(windFrom);
-  let tail;
-  if (primary === "crosswind") {
-    tail = side || "crosswind";
-  } else if (primary === "at your back" || primary === "into you") {
-    tail = primary; // no side needed
-  } else { // helping/hurting quartering
-    tail = side ? `${primary}, ${side}` : primary;
-  }
-
-  return { fromCard, windTo, relTo, phrase: `Wind out of the ${fromCard}, ${tail}` };
+  return null;
 }
-
-// ---------- Replacement compass listener (arrow = wind-to; text = broadcast phrasing) ----------
+function relativeWindLabel(delta){
+  const a = normalizeDeg(delta);
+  const dir =
+    (a < 22.5 || a >= 337.5) ? "headwind" :
+    (a >= 157.5 && a < 202.5) ? "tailwind" :
+    (a >= 67.5 && a < 112.5) ? "from your right" :
+    (a >= 247.5 && a < 292.5) ? "from your left" :
+    (a > 22.5 && a < 67.5) ? "quartering right" :
+    (a > 112.5 && a < 157.5) ? "quartering behind (right)" :
+    (a > 202.5 && a < 247.5) ? "quartering behind (left)" :
+    "quartering left";
+  return { a, dir };
+}
 async function enableCompass(){
-  // iOS permission prompt
   if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
     try {
       const resp = await DeviceOrientationEvent.requestPermission();
@@ -239,42 +245,26 @@ async function enableCompass(){
       return;
     }
   }
-
   window.addEventListener("deviceorientation", (evt) => {
-    // Determine heading (0 = facing North)
-    let heading = null;
-    if (typeof evt.webkitCompassHeading === "number") {
-      heading = normalizeDeg(evt.webkitCompassHeading);
-    } else if (typeof evt.alpha === "number") {
-      const so = (screen.orientation && screen.orientation.angle) ? screen.orientation.angle : 0;
-      heading = normalizeDeg(360 - evt.alpha + so);
-    }
+    const heading = extractHeading(evt);
     if (heading == null) return;
-
-    const windFrom = LAST_WX?.WDIR;
-    const wspd = LAST_WX?.WSPD;
-
-    if (typeof windFrom !== "number") return;
-
-    // Build phrase + rotate arrow to wind-to
-    const info = golfWindPhrase(heading, windFrom);
-    const arrow = document.getElementById("windArrow");
-    if (arrow) arrow.style.transform = `rotate(${info.relTo}deg)`; // arrow points where air is going (downwind)
-
-    const readout = document.getElementById("compassReadout");
-    if (readout) {
-      const speedTxt = (typeof wspd === "number") ? ` • ${Math.round(wspd)} mph` : "";
-      readout.textContent = `${info.phrase}${speedTxt}`;
-      // e.g., "Wind out of the East, off your right • 12 mph"
-      // or    "Wind out of the South, at your back • 8 mph"
+    const windFrom = LAST_WX?.WDIR ?? null;
+    if (windFrom != null) {
+      const windTo = (windFrom + 180) % 360;               // show where wind is blowing TO
+      const rel = normalizeDeg(windTo - heading);          // arrow relative to facing
+      const arrow = document.getElementById("windArrow");
+      if (arrow) arrow.style.transform = `rotate(${rel}deg)`;
+      const { dir } = relativeWindLabel(normalizeDeg(windFrom - heading)); // phrasing vs. facing
+      const wspd = LAST_WX?.WSPD != null ? Math.round(LAST_WX.WSPD) : "—";
+      const ro = document.getElementById("compassReadout");
+      if (ro) ro.textContent = `Wind out of the ${Math.round(windFrom)}°, ${dir} • ${wspd} mph`;
     }
   }, { passive: true });
 }
 
-
 /** ===== Main flow ===== **/
 async function run() {
-  // Gather inputs
+  // Inputs
   const holeStr = $("hole").value;
   const hole = parseInt(holeStr || "0", 10);
   if (!hole || hole < 1 || hole > 18) {
@@ -282,42 +272,61 @@ async function run() {
     return;
   }
 
-  const prefs = {
-    driver: parseFloat($("driver").value || "250"),
-    iron:   parseFloat($("iron").value   || "165"),
-    when:   $("when").value
-  };
-
-  // Bearing strictly from data (no manual override)
+  // Resolve bearing strictly from data (no manual override in MVP)
   let bearing = HOLE_BEARINGS[hole];
   if (bearing == null) {
-    $("out").innerHTML = `<p style="color:#b91c1c">Missing bearing for hole ${hole}. Check assets/data/brookridge_holes.json.</p>`;
+    $("out").innerHTML = `<p style="color:#b91c1c">
+      Missing bearing for hole ${hole}. Check assets/data/brookridge_holes.json.
+    </p>`;
     return;
   }
   if ($("bearingView")) $("bearingView").textContent = `${bearing}°`;
 
-  // Persist user settings
+  // Prefs: if player profile is present, seed from it; else fall back to inputs/localStorage
+  const p = loadPrefs() || {};
+  const driverStats = getClubStats("driver", ["d", "drv", "1w"]);
+  const sevenIStats = getClubStats("7 iron", ["7i", "7-iron", "seven iron"]);
+  const driverCarry = driverStats?.average_carry ?? parseFloat($("driver").value || p.driver || "250");
+  const sevenCarry  = sevenIStats?.average_carry ?? parseFloat($("iron").value   || p.iron   || "165");
+
+  const prefs = {
+    driver: driverCarry,
+    iron:   sevenCarry,
+    when:   $("when").value
+  };
+
+  // Persist carries for convenience
   savePrefs({ driver: prefs.driver, iron: prefs.iron, lastBearing: bearing });
 
   // Weather → UI + tips
   $("wx").textContent = "Fetching weather…";
   $("out").innerHTML = `<p>Calculating tips…</p>`;
   const wx = await fetchWeather(prefs.when === "next");
-  LAST_WX = wx;              // compass uses wind
+  LAST_WX = wx;              // compass uses this
   renderWeather(wx);
   $("out").innerHTML = tipsHtml(hole, bearing, wx, prefs);
 }
 
 /** ===== Init ===== **/
 (async function init() {
-  // Load bearings + yardages before anything else
+  // Load course + player profile
   await loadHoleData();
+  await loadPlayerProfile();
 
+  // Seed UI with known carries if inputs are empty
   const p = loadPrefs();
-  if (p.driver) $("driver").value = p.driver;
-  if (p.iron) $("iron").value = p.iron;
+  if ($("driver").value.trim() === "") {
+    const d = getClubStats("driver", ["d","drv","1w"]);
+    if (d?.average_carry) $("driver").value = Math.round(d.average_carry);
+    else if (p?.driver) $("driver").value = p.driver;
+  }
+  if ($("iron").value.trim() === "") {
+    const i7 = getClubStats("7 iron", ["7i","7-iron","seven iron"]);
+    if (i7?.average_carry) $("iron").value = Math.round(i7.average_carry);
+    else if (p?.iron) $("iron").value = p.iron;
+  }
 
-  // Update the bearing pill when hole changes
+  // Update bearing pill when hole changes
   $("hole").addEventListener("change", () => {
     const h = parseInt($("hole").value || "0", 10);
     if (!h) return;
@@ -325,15 +334,10 @@ async function run() {
     if (b != null && $("bearingView")) $("bearingView").textContent = `${b}°`;
   });
 
-  // Wire buttons
+  // Buttons
   $("go").addEventListener("click", async () => {
-    try {
-      await run();
-    } catch (e) {
-      $("out").innerHTML = `<p style="color:#b91c1c">Error: ${e.message}</p>`;
-    }
+    try { await run(); }
+    catch (e) { $("out").innerHTML = `<p style="color:#b91c1c">Error: ${e.message}</p>`; }
   });
-
-  // Optional compass button
   document.getElementById("enableCompass")?.addEventListener("click", enableCompass);
 })();
