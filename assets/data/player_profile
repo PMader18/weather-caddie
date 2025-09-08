@@ -12,6 +12,6 @@
     { "name": "9 iron", "average_carry": 131.2, "average_total": 140.4, "dispersion": 6 },
     { "name": "PW", "average_carry": 119.7, "average_total": 127.6, "dispersion": 5 },
     { "name": "54", "average_carry": 101.7, "average_total": 109.8, "dispersion": 5 },
-    { "name": "60", "average_carry": 84.9, "average_total": 90.4, "dispersion": 5 },
+    { "name": "60", "average_carry": 84.9, "average_total": 90.4, "dispersion": 5 }
   ]
 }
