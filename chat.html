@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Weather Caddie — AI Caddie</title>
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+<header>
+<h1>AI Caddie</h1>
+<nav class="subnav">
+<a href="home.html">Home</a>
+<a href="portal.html">Profile</a>
+<a href="data.html">Start Round</a>
+</nav>
+</header>
+
+
+<main>
+<section class="card chat-frame">
+<div id="chatLog" class="chat-log"></div>
+<div class="chat-input">
+<button id="btnMic" class="btn">🎤</button>
+<input id="chatText" placeholder="Ask your caddie…" />
+<button id="btnSend" class="btn primary">Send</button>
+</div>
+<p class="muted tiny">MVP uses browser speech APIs locally. Later: OpenAI Realtime.</p>
+</section>
+</main>
+
+
+<script src="assets/js/store.js"></script>
+<script src="assets/js/chat.js"></script>
+</body>
+</html>

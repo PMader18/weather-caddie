@@ -1,0 +1,18 @@
+{
+"owner": "patrick",
+"clubs": [
+{ "name": "driver", "average_carry": 288.5, "average_total": 323.7, "dispersion": 12 },
+{ "name": "3 wood", "average_carry": 260.9, "average_total": 292.2, "dispersion": 10 },
+{ "name": "4 hybrid", "average_carry": 232.9, "average_total": 258.8, "dispersion": 9 },
+{ "name": "4 iron (srixon)", "average_carry": 210.5, "average_total": 231.6, "dispersion": 8 },
+{ "name": "4 iron", "average_carry": 197.8, "average_total": 214.2, "dispersion": 8 },
+{ "name": "5 iron", "average_carry": 180.3, "average_total": 194.6, "dispersion": 7 },
+{ "name": "6 iron", "average_carry": 166.6, "average_total": 179.4, "dispersion": 7 },
+{ "name": "7 iron", "average_carry": 158.4, "average_total": 170.3, "dispersion": 7 },
+{ "name": "8 iron", "average_carry": 144.9, "average_total": 155.4, "dispersion": 6 },
+{ "name": "9 iron", "average_carry": 131.2, "average_total": 140.4, "dispersion": 6 },
+{ "name": "PW", "average_carry": 119.7, "average_total": 127.6, "dispersion": 5 },
+{ "name": "54", "average_carry": 101.7, "average_total": 109.8, "dispersion": 5 },
+{ "name": "60", "average_carry": 84.9, "average_total": 90.4, "dispersion": 5 }
+]
+}

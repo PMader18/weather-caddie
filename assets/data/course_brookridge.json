@@ -1,0 +1,102 @@
+{
+  "course": {
+    "name": "Brookridge CC",
+    "lat": 38.9430,
+    "lon": -94.6900,
+    "tz": "America/Chicago"
+  },
+  "tees": [
+    {
+      "name": "Black",
+      "holes": [
+        { "hole": 1,  "par": 3, "yardage": 177, "bearing_deg": 94 },
+        { "hole": 2,  "par": 5, "yardage": 493, "bearing_deg": 183 },
+        { "hole": 3,  "par": 4, "yardage": 378, "bearing_deg": 0 },
+        { "hole": 4,  "par": 3, "yardage": 180, "bearing_deg": 316 },
+        { "hole": 5,  "par": 4, "yardage": 465, "bearing_deg": 161 },
+        { "hole": 6,  "par": 3, "yardage": 174, "bearing_deg": 215 },
+        { "hole": 7,  "par": 4, "yardage": 372, "bearing_deg": 106 },
+        { "hole": 8,  "par": 4, "yardage": 428, "bearing_deg": 286 },
+        { "hole": 9,  "par": 5, "yardage": 563, "bearing_deg": 4 },
+        { "hole": 10, "par": 4, "yardage": 356, "bearing_deg": 94 },
+        { "hole": 11, "par": 4, "yardage": 426, "bearing_deg": 273 },
+        { "hole": 12, "par": 4, "yardage": 305, "bearing_deg": 220 },
+        { "hole": 13, "par": 4, "yardage": 455, "bearing_deg": 262 },
+        { "hole": 14, "par": 3, "yardage": 190, "bearing_deg": 277 },
+        { "hole": 15, "par": 3, "yardage": 188, "bearing_deg": 273 },
+        { "hole": 16, "par": 4, "yardage": 455, "bearing_deg": 76 },
+        { "hole": 17, "par": 4, "yardage": 350, "bearing_deg": 2 },
+        { "hole": 18, "par": 5, "yardage": 528, "bearing_deg": 116 }
+      ]
+    },
+    {
+      "name": "Blue",
+      "holes": [
+        { "hole": 1,  "par": 3, "yardage": 167, "bearing_deg": 94 },
+        { "hole": 2,  "par": 5, "yardage": 481, "bearing_deg": 183 },
+        { "hole": 3,  "par": 4, "yardage": 370, "bearing_deg": 0 },
+        { "hole": 4,  "par": 3, "yardage": 164, "bearing_deg": 316 },
+        { "hole": 5,  "par": 4, "yardage": 446, "bearing_deg": 161 },
+        { "hole": 6,  "par": 3, "yardage": 155, "bearing_deg": 215 },
+        { "hole": 7,  "par": 4, "yardage": 372, "bearing_deg": 106 },
+        { "hole": 8,  "par": 4, "yardage": 406, "bearing_deg": 286 },
+        { "hole": 9,  "par": 5, "yardage": 541, "bearing_deg": 4 },
+        { "hole": 10, "par": 4, "yardage": 345, "bearing_deg": 94 },
+        { "hole": 11, "par": 4, "yardage": 399, "bearing_deg": 273 },
+        { "hole": 12, "par": 4, "yardage": 292, "bearing_deg": 220 },
+        { "hole": 13, "par": 4, "yardage": 430, "bearing_deg": 262 },
+        { "hole": 14, "par": 3, "yardage": 163, "bearing_deg": 277 },
+        { "hole": 15, "par": 3, "yardage": 145, "bearing_deg": 273 },
+        { "hole": 16, "par": 4, "yardage": 435, "bearing_deg": 76 },
+        { "hole": 17, "par": 4, "yardage": 325, "bearing_deg": 2 },
+        { "hole": 18, "par": 5, "yardage": 515, "bearing_deg": 116 }
+      ]
+    },
+    {
+      "name": "White",
+      "holes": [
+        { "hole": 1,  "par": 3, "yardage": 145, "bearing_deg": 94 },
+        { "hole": 2,  "par": 5, "yardage": 459, "bearing_deg": 183 },
+        { "hole": 3,  "par": 4, "yardage": 341, "bearing_deg": 0 },
+        { "hole": 4,  "par": 3, "yardage": 144, "bearing_deg": 316 },
+        { "hole": 5,  "par": 4, "yardage": 429, "bearing_deg": 161 },
+        { "hole": 6,  "par": 3, "yardage": 145, "bearing_deg": 215 },
+        { "hole": 7,  "par": 4, "yardage": 361, "bearing_deg": 106 },
+        { "hole": 8,  "par": 4, "yardage": 396, "bearing_deg": 286 },
+        { "hole": 9,  "par": 5, "yardage": 509, "bearing_deg": 4 },
+        { "hole": 10, "par": 4, "yardage": 321, "bearing_deg": 94 },
+        { "hole": 11, "par": 4, "yardage": 361, "bearing_deg": 273 },
+        { "hole": 12, "par": 4, "yardage": 279, "bearing_deg": 220 },
+        { "hole": 13, "par": 4, "yardage": 364, "bearing_deg": 262 },
+        { "hole": 14, "par": 3, "yardage": 147, "bearing_deg": 277 },
+        { "hole": 15, "par": 3, "yardage": 124, "bearing_deg": 273 },
+        { "hole": 16, "par": 4, "yardage": 400, "bearing_deg": 76 },
+        { "hole": 17, "par": 4, "yardage": 319, "bearing_deg": 2 },
+        { "hole": 18, "par": 5, "yardage": 489, "bearing_deg": 116 }
+      ]
+    },
+    {
+      "name": "Red",
+      "holes": [
+        { "hole": 1,  "par": 3, "yardage": 121, "bearing_deg": 94 },
+        { "hole": 2,  "par": 5, "yardage": 404, "bearing_deg": 183 },
+        { "hole": 3,  "par": 4, "yardage": 333, "bearing_deg": 0 },
+        { "hole": 4,  "par": 3, "yardage": 130, "bearing_deg": 316 },
+        { "hole": 5,  "par": 4, "yardage": 423, "bearing_deg": 161 },
+        { "hole": 6,  "par": 3, "yardage": 127, "bearing_deg": 215 },
+        { "hole": 7,  "par": 4, "yardage": 294, "bearing_deg": 106 },
+        { "hole": 8,  "par": 4, "yardage": 344, "bearing_deg": 286 },
+        { "hole": 9,  "par": 5, "yardage": 450, "bearing_deg": 4 },
+        { "hole": 10, "par": 4, "yardage": 312, "bearing_deg": 94 },
+        { "hole": 11, "par": 4, "yardage": 353, "bearing_deg": 273 },
+        { "hole": 12, "par": 4, "yardage": 230, "bearing_deg": 220 },
+        { "hole": 13, "par": 4, "yardage": 310, "bearing_deg": 262 },
+        { "hole": 14, "par": 3, "yardage": 133, "bearing_deg": 277 },
+        { "hole": 15, "par": 3, "yardage": 115, "bearing_deg": 273 },
+        { "hole": 16, "par": 4, "yardage": 370, "bearing_deg": 76 },
+        { "hole": 17, "par": 4, "yardage": 277, "bearing_deg": 2 },
+        { "hole": 18, "par": 5, "yardage": 414, "bearing_deg": 116 }
+      ]
+    }
+  ]
+}
