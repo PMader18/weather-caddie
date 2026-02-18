@@ -37,7 +37,7 @@ async function loadHoleData() {
 }
 
 /** ===== Player profile (YOUR JSON) =====
- * Loads assets/data/player_profile.json:
+ * Loads assets/data/player_profile/patrick.json:
  * {
  *   "clubs": [
  *     { "name":"7 iron", "average_carry": 158.4, "average_total": 170.3, "dispersion": 7 },
@@ -51,18 +51,26 @@ function normClub(name){ return String(name||"").trim().toLowerCase(); }
 
 async function loadPlayerProfile() {
   try {
-    const resp = await fetch("assets/data/player_profile.json", { cache: "no-store" });
+    const resp = await fetch("assets/data/player_profile/patrick.json", { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     if (!Array.isArray(data.clubs)) throw new Error("Missing clubs array");
     PLAYER_PROFILE = data;
     CLUB_LOOKUP = new Map();
     for (const c of data.clubs) {
-      CLUB_LOOKUP.set(normClub(c.name), c);
+      const key = c.name || c.club;
+      if (!key) continue;
+      const normalized = {
+        ...c,
+        name: key,
+        average_carry: c.average_carry ?? c.carry_yards ?? c.carry ?? null,
+        average_total: c.average_total ?? c.total_yards ?? c.total ?? null,
+      };
+      CLUB_LOOKUP.set(normClub(key), normalized);
     }
     console.log("✅ Player profile loaded", PLAYER_PROFILE);
   } catch (err) {
-    console.error("❌ Failed to load player_profile.json:", err);
+    console.error("❌ Failed to load player profile:", err);
     PLAYER_PROFILE = { clubs: [] };
     CLUB_LOOKUP = new Map();
   }
