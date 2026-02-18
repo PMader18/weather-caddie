@@ -120,6 +120,9 @@
         <option value="next">Next hour</option>
       </select>
 
+      <button type="button" id="useLocation">Use my location for hyper-local weather</button>
+      <p id="locationStatus" class="muted tiny">Location source: Brookridge fallback</p>
+
       <button id="go">Get Weather Tips</button>
     </section>
 
@@ -190,9 +193,9 @@
       setSummary(undefined, tblBody.rows.length);
     });
 
-    // ---- Load your JSON file: assets/data/player_profile.json ----
+    // ---- Load your JSON file: assets/data/player_profile/patrick.json ----
     try {
-      const resp = await fetch('assets/data/player_profile.json', { cache: 'no-store' });
+      const resp = await fetch('assets/data/player_profile/patrick.json', { cache: 'no-store' });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
 
@@ -201,10 +204,10 @@
 
       // Populate from JSON
       const clubs = Array.isArray(data.clubs) ? data.clubs : [];
-      clubs.forEach(c => addRow(c.club, c.carry_yards, c.dispersion));
+      clubs.forEach(c => addRow(c.club || c.name, c.carry_yards || c.average_carry || '—', c.dispersion));
 
       // Summary
-      setSummary(data.player || 'My Saved Profile', clubs.length);
+      setSummary(data.player || data.owner || 'My Saved Profile', clubs.length);
     } catch (err) {
       // If file is missing or invalid, leave placeholders in place
       console.warn('player_profile.json not loaded:', err);

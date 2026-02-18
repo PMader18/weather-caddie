@@ -37,7 +37,7 @@ async function loadHoleData() {
 }
 
 /** ===== Player profile (YOUR JSON) =====
- * Loads assets/data/player_profile.json:
+ * Loads assets/data/player_profile/patrick.json:
  * {
  *   "clubs": [
  *     { "name":"7 iron", "average_carry": 158.4, "average_total": 170.3, "dispersion": 7 },
@@ -51,18 +51,26 @@ function normClub(name){ return String(name||"").trim().toLowerCase(); }
 
 async function loadPlayerProfile() {
   try {
-    const resp = await fetch("assets/data/player_profile.json", { cache: "no-store" });
+    const resp = await fetch("assets/data/player_profile/patrick.json", { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     if (!Array.isArray(data.clubs)) throw new Error("Missing clubs array");
     PLAYER_PROFILE = data;
     CLUB_LOOKUP = new Map();
     for (const c of data.clubs) {
-      CLUB_LOOKUP.set(normClub(c.name), c);
+      const key = c.name || c.club;
+      if (!key) continue;
+      const normalized = {
+        ...c,
+        name: key,
+        average_carry: c.average_carry ?? c.carry_yards ?? c.carry ?? null,
+        average_total: c.average_total ?? c.total_yards ?? c.total ?? null,
+      };
+      CLUB_LOOKUP.set(normClub(key), normalized);
     }
     console.log("✅ Player profile loaded", PLAYER_PROFILE);
   } catch (err) {
-    console.error("❌ Failed to load player_profile.json:", err);
+    console.error("❌ Failed to load player profile:", err);
     PLAYER_PROFILE = { clubs: [] };
     CLUB_LOOKUP = new Map();
   }
@@ -91,6 +99,70 @@ const COEFF = {
   fast_green_rh_pct: 50
 };
 
+let WEATHER_CONTEXT = {
+  lat: COURSE.lat,
+  lon: COURSE.lon,
+  source: "fallback",
+  accuracy_m: null,
+  elevation_ft: COURSE.elevation_ft,
+};
+
+function updateLocationStatus() {
+  const el = $("locationStatus");
+  if (!el) return;
+  const acc = WEATHER_CONTEXT.accuracy_m != null ? ` · ±${Math.round(WEATHER_CONTEXT.accuracy_m)}m` : "";
+  const elev = WEATHER_CONTEXT.elevation_ft != null ? ` · Elev ${Math.round(WEATHER_CONTEXT.elevation_ft)} ft` : "";
+  el.textContent = `Location source: ${WEATHER_CONTEXT.source}${acc}${elev}`;
+}
+
+function getCurrentElevationPct() {
+  const elev = WEATHER_CONTEXT.elevation_ft ?? COURSE.elevation_ft;
+  return Math.round((elev / 1000) * 1.0 * 100) / 100;
+}
+
+function getBrowserPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported by this browser"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 120000,
+    });
+  });
+}
+
+async function resolveWeatherLocation(forcePrompt = false) {
+  if (!forcePrompt && WEATHER_CONTEXT.source === "device") {
+    return WEATHER_CONTEXT;
+  }
+
+  try {
+    const pos = await getBrowserPosition();
+    WEATHER_CONTEXT = {
+      ...WEATHER_CONTEXT,
+      lat: pos.coords.latitude,
+      lon: pos.coords.longitude,
+      accuracy_m: pos.coords.accuracy ?? null,
+      source: "device",
+    };
+  } catch (err) {
+    console.warn("⚠️ Using fallback weather location:", err?.message || err);
+    WEATHER_CONTEXT = {
+      ...WEATHER_CONTEXT,
+      lat: COURSE.lat,
+      lon: COURSE.lon,
+      source: "fallback",
+      accuracy_m: null,
+    };
+  }
+
+  updateLocationStatus();
+  return WEATHER_CONTEXT;
+}
+
 /** ===== Utilities ===== **/
 const $ = (id) => document.getElementById(id);
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -100,15 +172,15 @@ const loadPrefs = () => JSON.parse(localStorage.getItem("wc_prefs") || "{}");
 const savePrefs = (p) => localStorage.setItem("wc_prefs", JSON.stringify(p));
 
 /** ===== Weather (Open-Meteo, no key) ===== **/
-async function fetchWeather(nextHour = false) {
+async function fetchWeather(nextHour = false, location = WEATHER_CONTEXT) {
   const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.searchParams.set("latitude", COURSE.lat);
-  url.searchParams.set("longitude", COURSE.lon);
+  url.searchParams.set("latitude", location.lat);
+  url.searchParams.set("longitude", location.lon);
   url.searchParams.set("current", "temperature_2m,relative_humidity_2m,pressure_msl,wind_speed_10m,wind_direction_10m,precipitation");
   url.searchParams.set("hourly", "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation");
   url.searchParams.set("wind_speed_unit", "mph");
   url.searchParams.set("temperature_unit", "fahrenheit");
-  url.searchParams.set("timezone", COURSE.tz);
+  url.searchParams.set("timezone", "auto");
 
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error("Weather fetch failed");
@@ -133,6 +205,11 @@ async function fetchWeather(nextHour = false) {
     RAIN = data.hourly.precipitation[idx];
     stamp = data.hourly.time[idx];
   }
+
+  if (typeof data.elevation === "number") {
+    WEATHER_CONTEXT.elevation_ft = data.elevation * 3.28084;
+  }
+
   return { T, RH, WSPD, WDIR, RAIN, stamp };
 }
 
@@ -149,7 +226,7 @@ function carryPct(headCompMph, tempF, clubKind) {
   const tempPct = ((tempF - 70) / 10) * COEFF.temp_pct_per_10F;
   const windCoef = clubKind === "driver" ? COEFF.wind_pct_per_mph_driver : COEFF.wind_pct_per_mph_7i;
   const windPct = headCompMph * windCoef * 100;
-  return COEFF.elev_bonus_pct + tempPct + windPct; // total %
+  return getCurrentElevationPct() + tempPct + windPct; // total %
 }
 
 function crossAimYards(crossMph, shotYards) {
@@ -170,9 +247,11 @@ function greenNote(rainMM, rhPct, windMph) {
 function renderWeather(wx) {
   const { T, RH, WSPD, WDIR, RAIN, stamp } = wx;
   $("wx").innerHTML =
-    `<div><b>${COURSE.name}</b> · ${new Date(stamp).toLocaleString()}</div>
+    `<div><b>Hyper-local conditions</b> · ${new Date(stamp).toLocaleString()}</div>
+     <div>Lat/Lon: <b>${round(WEATHER_CONTEXT.lat, 5)}, ${round(WEATHER_CONTEXT.lon, 5)}</b> (${WEATHER_CONTEXT.source})</div>
      <div>Temp: <b>${round(T,1)}°F</b> · Wind: <b>${round(WSPD,1)} mph</b> @ <b>${Math.round(WDIR)}° (from)</b></div>
      <div>Humidity: <b>${Math.round(RH)}%</b> · Rain (last hr): <b>${round(RAIN,2)} mm</b></div>`;
+  updateLocationStatus();
 }
 
 function tipsHtml(hole, bearing, wx, prefs) {
@@ -207,7 +286,7 @@ function tipsHtml(hole, bearing, wx, prefs) {
       (${sgn(round(ironPct,1))}${round(ironPct,1)}%). Crosswind: ${aimSide(ironAim)} ~<b>${round(Math.abs(ironAim))} yds</b>.
     </p>
     <p><b>Putt / Greens:</b> ${putt}</p>
-    <p class="muted">Tuning: elevation +${COEFF.elev_bonus_pct}% baseline; ±${COEFF.temp_pct_per_10F}% / 10°F; wind sens (driver) ${(COEFF.wind_pct_per_mph_driver*100*5).toFixed(2)}% / 5 mph.</p>
+    <p class="muted">Tuning: elevation +${round(getCurrentElevationPct(),2)}% baseline; ±${COEFF.temp_pct_per_10F}% / 10°F; wind sens (driver) ${(COEFF.wind_pct_per_mph_driver*100*5).toFixed(2)}% / 5 mph.</p>
   `;
 }
 
@@ -301,7 +380,8 @@ async function run() {
   // Weather → UI + tips
   $("wx").textContent = "Fetching weather…";
   $("out").innerHTML = `<p>Calculating tips…</p>`;
-  const wx = await fetchWeather(prefs.when === "next");
+  const loc = await resolveWeatherLocation(false);
+  const wx = await fetchWeather(prefs.when === "next", loc);
   LAST_WX = wx;              // compass uses this
   renderWeather(wx);
   $("out").innerHTML = tipsHtml(hole, bearing, wx, prefs);
@@ -332,6 +412,13 @@ async function run() {
     if (!h) return;
     const b = HOLE_BEARINGS[h];
     if (b != null && $("bearingView")) $("bearingView").textContent = `${b}°`;
+  });
+
+
+  // Try to seed weather location from the device for hyper-local conditions
+  await resolveWeatherLocation(false);
+  $("useLocation")?.addEventListener("click", async () => {
+    await resolveWeatherLocation(true);
   });
 
   // Buttons
